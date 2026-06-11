@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0E1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scootlink">
+<title>Scootlink</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#0A0E1A;--card:#0F1829;--borda:#1A2540;
+  --verde:#00E676;--vd:#00C25F;--vg:rgba(0,230,118,.15);--vb:rgba(0,230,118,.3);
+  --laranja:#FF9500;--vermelho:#FF3B30;
+  --branco:#fff;--cinza:#8E9BB5;--suave:#4A5680;
+  --campo:#F2F4F7;--cborda:#E8EBF0;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--fundo);color:var(--branco);}
+#app{max-width:420px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--fundo);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .7s,visibility .7s;}
+#splash.out{opacity:0;visibility:hidden;pointer-events:none;}
+.sp-ic{font-size:64px;margin-bottom:16px;animation:spb 2s ease infinite;}
+@keyframes spb{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.sp-nome{font-size:40px;font-weight:900;letter-spacing:-2px;margin-bottom:4px;}
+.sp-nome span{color:var(--verde);}
+.sp-sub{font-size:12px;font-style:italic;color:var(--cinza);margin-bottom:3px;}
+.sp-neura{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--suave);}
+.sp-neura b{color:var(--verde);}
+.sp-bar{width:50px;height:2px;background:var(--borda);border-radius:2px;overflow:hidden;margin-top:20px;}
+.sp-bar::after{content:'';display:block;height:100%;width:0;background:var(--verde);animation:lb 2.3s ease .3s forwards;}
+@keyframes lb{to{width:100%;}}
+
+/* TELAS */
+.tela{display:none;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:80px;}
+.tela.ativa{display:block;animation:tin .3s ease;}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* LOGO */
+.logo{text-align:center;padding:48px 16px 4px;}
+.logo h1{font-size:28px;font-weight:900;letter-spacing:-1.5px;}
+.logo h1 span{color:var(--verde);}
+.logo p{font-size:12px;font-style:italic;color:var(--cinza);margin-top:2px;}
+
+/* PILLS */
+.pills{display:flex;flex-wrap:wrap;gap:7px;padding:10px 14px 4px;justify-content:center;}
+.pill{padding:7px 14px;border-radius:20px;border:1px solid var(--borda);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--cinza);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.pill.on{background:var(--verde);border-color:var(--verde);color:#000;font-weight:700;}
+.pill:hover:not(.on){border-color:var(--vb);color:var(--verde);}
+
+/* CARDS */
+.wc{background:var(--branco);border-radius:16px;padding:16px;margin:8px 14px 0;color:#0A0E1A;}
+.dc{background:var(--card);border-radius:16px;padding:16px;margin:8px 14px 0;border:1px solid var(--borda);}
+.wt{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cinza);margin-bottom:10px;}
+.sh{border-radius:14px;padding:13px 15px;margin:8px 14px 0;display:flex;align-items:center;gap:11px;}
+.sh.v{background:linear-gradient(135deg,#0A2A1A,#0F1829);border:1px solid var(--vb);}
+.sh.r{background:linear-gradient(135deg,#2A0808,#1A0F0F);border:1px solid rgba(255,59,48,.35);}
+.sh-t{font-size:16px;font-weight:800;}
+.sh-s{font-size:11px;margin-top:1px;}
+.sh.v .sh-s{color:var(--verde);}
+.sh.r .sh-s{color:var(--vermelho);}
+
+/* VELOCÍMETRO */
+.vc{background:var(--branco);border-radius:16px;padding:16px;margin:8px 14px 0;}
+.vc-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cinza);margin-bottom:10px;}
+.vc-body{display:flex;flex-direction:column;align-items:center;}
+.vc-svg{position:relative;width:190px;height:106px;}
+.vc-svg svg{width:190px;height:106px;overflow:visible;}
+.vc-center{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;}
+.vnum{font-size:46px;font-weight:900;letter-spacing:-3px;line-height:1;transition:color .4s;}
+.vnum.ok{color:#00C25F;}
+.vnum.av{color:var(--laranja);}
+.vnum.al{color:var(--vermelho);animation:vs .3s ease infinite;}
+@keyframes vs{0%,100%{transform:translateX(-1px)}50%{transform:translateX(1px)}}
+.vkmh{font-size:11px;font-weight:600;color:var(--cinza);letter-spacing:1px;}
+.vst{margin-top:6px;font-size:12px;font-weight:700;color:#00C25F;}
+.vst.al{color:var(--vermelho);}
+
+/* GPS STATUS */
+.gps-bar{display:flex;align-items:center;gap:8px;background:var(--campo);border-radius:10px;padding:8px 12px;margin-top:10px;}
+.gps-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.gps-dot.on{background:var(--verde);animation:dp 1.5s ease infinite;}
+.gps-dot.warn{background:var(--laranja);}
+@keyframes dp{0%,100%{opacity:1}50%{opacity:.3}}
+.gps-txt{font-size:11px;color:var(--suave);flex:1;}
+.gps-plat{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;}
+.gps-plat.android{background:rgba(0,230,118,.1);color:var(--vd);}
+.gps-plat.ios{background:rgba(255,149,0,.1);color:var(--laranja);}
+
+/* MINI STATS */
+.ms3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:8px 14px 0;}
+.ms{background:var(--branco);border-radius:13px;padding:11px 7px;text-align:center;}
+.ms-ic{font-size:18px;margin-bottom:3px;}
+.ms-v{font-size:17px;font-weight:800;color:#0A0E1A;letter-spacing:-.5px;}
+.ms-v.r{color:var(--vermelho);}
+.ms-l{font-size:9px;color:var(--cinza);font-weight:500;}
+
+/* FUNC ITEMS */
+.fi{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--cborda);}
+.fi:last-child{border-bottom:none;}
+.fic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.fic.v{background:rgba(0,230,118,.1);}
+.fic.l{background:rgba(255,149,0,.1);}
+.fic.r{background:rgba(255,59,48,.1);}
+.fic.b{background:rgba(100,150,255,.1);}
+.fi-t{font-size:12px;font-weight:600;color:#0A0E1A;}
+.fi-d{font-size:10px;color:#8E9BB5;margin-top:1px;}
+
+/* BOTÕES */
+.bv{display:block;width:100%;padding:14px;background:var(--verde);border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;margin-bottom:8px;}
+.be{display:block;width:100%;padding:13px;background:var(--card);border:1px solid var(--borda);border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--cinza);cursor:pointer;margin-bottom:8px;}
+.br2{display:flex;gap:8px;margin:8px 14px 0;}
+.brv{flex:1;padding:12px;background:var(--verde);border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;color:#000;cursor:pointer;}
+.brr{flex:1;padding:12px;background:var(--vermelho);border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
+
+/* INPUTS */
+.il{font-size:12px;font-weight:600;color:#0A0E1A;margin-bottom:4px;display:block;}
+.inp{width:100%;background:var(--campo);border:1.5px solid var(--cborda);border-radius:10px;padding:11px 12px;font-family:'Inter',sans-serif;font-size:13px;color:#0A0E1A;outline:none;transition:border-color .2s;margin-bottom:9px;}
+.inp:focus{border-color:var(--verde);}
+.inp::placeholder{color:#B0BAD0;}
+.ir{display:flex;gap:7px;}
+.ig{flex:1;}
+.fs{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cinza);margin:12px 0 7px;display:flex;align-items:center;gap:5px;}
+.bsal{width:100%;padding:14px;background:var(--verde);border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;margin-top:14px;}
+.sep{height:1px;background:var(--campo);margin:12px 0;}
+
+/* ALERTAS */
+.ai{padding:11px 0;border-bottom:1px solid var(--cborda);display:flex;align-items:flex-start;gap:9px;}
+.ai:last-child{border-bottom:none;}
+.aidot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.aidot.r{background:var(--vermelho);}
+.aidot.a{background:var(--laranja);}
+.aidot.v{background:var(--verde);}
+.ai-t{font-size:13px;font-weight:700;color:#0A0E1A;margin-bottom:2px;}
+.ai-d{font-size:12px;color:#4A5680;line-height:1.4;}
+.ai-h{font-size:10px;color:#B0BAD0;margin-top:2px;}
+.ai-b{display:inline-flex;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(255,59,48,.1);color:var(--vermelho);margin-left:5px;}
+.as{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B0BAD0;padding:9px 0 2px;}
+
+/* HISTÓRICO */
+.hd{background:var(--branco);border-radius:13px;padding:13px;margin-bottom:7px;}
+.hd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.hd-data{font-size:13px;font-weight:700;color:#0A0E1A;}
+.hdb{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.hdb.r{background:rgba(255,59,48,.1);color:var(--vermelho);}
+.hdb.v{background:rgba(0,194,95,.1);color:var(--vd);}
+.hdb.a{background:rgba(255,149,0,.1);color:var(--laranja);}
+.hbw{margin-bottom:5px;}
+.hbl{display:flex;justify-content:space-between;font-size:11px;color:var(--cinza);margin-bottom:3px;}
+.hbl span{font-weight:700;color:#0A0E1A;}
+.hbar{height:6px;background:var(--campo);border-radius:3px;overflow:hidden;}
+.hbf{height:100%;border-radius:3px;}
+.tp{display:flex;background:var(--campo);border-radius:20px;padding:3px;margin-bottom:12px;}
+.tpb{flex:1;padding:6px;border:none;border-radius:17px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--cinza);}
+.tpb.on{background:#0A0E1A;color:white;}
+.hs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.hs-v{font-size:24px;font-weight:900;letter-spacing:-1px;color:#0A0E1A;}
+.hs-v.r{color:var(--vermelho);}
+.hs-l{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--cinza);}
+.avp{background:#FFFBF0;border-radius:9px;padding:9px 11px;margin-bottom:10px;display:flex;gap:6px;}
+.avp p{font-size:11px;color:#B35900;font-weight:600;line-height:1.4;}
+
+/* PARADAS */
+.par{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--cborda);}
+.par:last-child{border-bottom:none;}
+.par-t{font-size:12px;font-weight:600;color:#0A0E1A;}
+.par-d{font-size:10px;color:#8E9BB5;margin-top:1px;}
+
+/* EVENTOS */
+.ei{padding:12px 0;border-bottom:1px solid var(--cborda);display:flex;gap:11px;}
+.ei:last-child{border-bottom:none;}
+.ei-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;}
+.ei-cat{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
+.ei-t{font-size:13px;font-weight:700;color:#0A0E1A;margin-bottom:2px;}
+.ei-d{font-size:11px;color:#4A5680;line-height:1.4;margin-bottom:4px;}
+.ei-dt{font-size:10px;color:#8E9BB5;}
+.ei-ex{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:var(--vg);color:var(--vd);border:1px solid var(--vb);margin-top:3px;}
+
+/* PAG */
+.po{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.po-opt{background:var(--campo);border:2px solid var(--cborda);border-radius:12px;padding:13px;cursor:pointer;text-align:center;transition:all .2s;}
+.po-opt.on{border-color:var(--verde);background:var(--vg);}
+.po-ic{font-size:24px;margin-bottom:5px;}
+.po-n{font-size:12px;font-weight:700;color:#0A0E1A;}
+.po-d{font-size:10px;color:var(--cinza);}
+.rl{display:flex;justify-content:space-between;font-size:12px;padding:8px 0;border-bottom:1px solid var(--campo);}
+.rl:last-child{border-bottom:none;}
+.rl-k{color:var(--cinza);}
+.rl-v{font-weight:700;color:#0A0E1A;}
+.rl-v.v{color:var(--vd);}
+.rl-v.g{color:var(--vd);font-size:14px;}
+
+/* PLACA */
+.placa{width:160px;background:white;border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5);border:2px solid #ccc;margin:0 auto 18px;}
+.pl-top{background:#003399;padding:4px 7px;display:flex;align-items:center;justify-content:space-between;}
+.pl-merc{font-size:6px;font-weight:700;color:white;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;}
+.pl-br-txt{font-size:12px;font-weight:800;color:white;letter-spacing:2px;}
+.pl-body{padding:5px 7px 2px;text-align:center;}
+.pl-cod{font-size:24px;font-weight:900;color:#1a1a1a;letter-spacing:2px;font-family:'Inter',sans-serif;line-height:1.1;}
+.pl-bot{display:flex;justify-content:space-between;padding:2px 7px 4px;}
+.pl-br{font-size:10px;font-weight:800;color:#1a1a1a;}
+.pl-brand{font-size:9px;font-weight:700;color:#00C25F;}
+
+/* CHEGADA */
+.ch-wrap{padding:50px 18px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.ch-circ{width:90px;height:90px;border-radius:50%;background:var(--vg);border:3px solid var(--vb);display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:18px;animation:chb .6s ease;}
+@keyframes chb{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.ch-t{font-size:26px;font-weight:900;letter-spacing:-1.5px;margin-bottom:6px;}
+.ch-t span{color:var(--verde);}
+.ch-s{font-size:12px;color:var(--cinza);line-height:1.6;margin-bottom:20px;}
+
+/* SCS */
+.scs{background:var(--branco);border-radius:13px;padding:12px 14px;margin:8px 14px 0;display:flex;align-items:center;gap:11px;}
+.scs-cat{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cinza);}
+.scs-n{font-size:14px;font-weight:800;color:#0A0E1A;}
+.scs-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(0,194,95,.1);border:1px solid rgba(0,194,95,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--vd);}
+.scs-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--verde);animation:dp 1.5s ease infinite;}
+
+/* HVEL */
+.hvc{width:100%;height:46px;background:var(--campo);border-radius:9px;overflow:hidden;position:relative;}
+.hvc-lim{position:absolute;top:22%;left:0;right:0;height:1px;border-top:1px dashed rgba(255,149,0,.5);}
+.hvc-line{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--verde),var(--laranja));border-radius:2px;top:50%;}
+
+/* IOS BADGE */
+.ios-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.25);border-radius:8px;padding:6px 10px;font-size:10px;color:var(--laranja);font-weight:600;margin-top:8px;line-height:1.4;}
+
+/* NEURAORB */
+.nf{text-align:center;padding:12px 14px 4px;border-top:1px solid var(--borda);margin:10px 14px 0;}
+.nf-t{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--suave);}
+.nf-t b{color:var(--verde);}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:rgba(10,14,26,.97);border-top:1px solid var(--borda);backdrop-filter:blur(20px);display:flex;padding:9px 0 20px;z-index:100;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px 2px;}
+.nb-ic{font-size:18px;transition:transform .2s;}
+.nb-lb{font-size:8px;font-family:'Inter',sans-serif;font-weight:500;color:var(--suave);letter-spacing:.5px;text-transform:uppercase;}
+.nb.on .nb-ic{transform:translateY(-2px);}
+.nb.on .nb-lb{color:var(--verde);font-weight:700;}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="sp-ic">🛵</div>
+  <div class="sp-nome"><span>Scoot</span>link</div>
+  <div class="sp-sub">Ecossistema de inteligência urbana</div>
+  <div class="sp-neura">por <b>NeuraOrb</b> · Protótipos Inteligentes</div>
+  <div class="sp-bar"></div>
+</div>
+
+<div id="app">
+
+<!-- BOAS-VINDAS -->
+<div class="tela ativa" id="t-bv">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill on"  onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill"     onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill"     onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill"     onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill"     onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill"     onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div style="margin:10px 14px 0;">
+    <div style="background:var(--card);border-radius:18px;padding:24px 20px;text-align:center;border:1px solid var(--borda);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:180px;height:180px;background:radial-gradient(circle,rgba(0,230,118,.05),transparent 70%);pointer-events:none;"></div>
+      <div style="font-size:66px;margin-bottom:12px;">🛵</div>
+      <div style="font-size:24px;font-weight:900;letter-spacing:-1px;margin-bottom:7px;"><span style="color:var(--verde);">Scoot</span>link</div>
+      <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,59,48,.15);border:1px solid rgba(255,59,48,.3);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;color:var(--vermelho);margin-bottom:12px;">🆘 Emergência</div>
+      <div style="font-size:13px;color:var(--cinza);line-height:1.7;margin-bottom:18px;">Aplicativo móvel com IA<br>Segurança para seu filho</div>
+      <button class="bv" onclick="go('t-cad')">Começar agora →</button>
+      <div style="font-size:12px;color:var(--cinza);">Já tem conta? <span style="color:var(--verde);font-weight:700;cursor:pointer;" onclick="go('t-dash')">Entrar</span></div>
+    </div>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+</div>
+
+<!-- CADASTRO -->
+<div class="tela" id="t-cad">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill"     onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill on"  onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill"     onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill"     onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill"     onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill"     onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div style="padding:10px 14px 2px;"><div style="font-size:20px;font-weight:900;letter-spacing:-1px;margin-bottom:2px;">Cadastro do Piloto</div><div style="font-size:12px;color:var(--cinza);">Dados do menor responsável pela scooter</div></div>
+  <div class="wc">
+    <div class="fs">📋 Dados Pessoais</div>
+    <label class="il">Nome completo</label><input class="inp" placeholder="João Pedro Alves">
+    <div class="ir"><div class="ig"><label class="il">CPF</label><input class="inp" placeholder="123.456.789-00"></div><div class="ig"><label class="il">RG</label><input class="inp" placeholder="12.345.678-9"></div></div>
+    <div class="ir"><div class="ig"><label class="il">Nascimento</label><input class="inp" placeholder="15/03/2010"></div><div class="ig"><label class="il">Idade</label><input class="inp" placeholder="15 anos"></div></div>
+    <div class="sep"></div>
+    <div class="fs">👥 Filiação</div>
+    <label class="il">Nome do pai / responsável</label><input class="inp" placeholder="Carlos Roberto Alves">
+    <label class="il">Nome da mãe / responsável</label><input class="inp" placeholder="Maria Fernanda Alves">
+    <label class="il">📱 Celular do responsável</label><input class="inp" type="tel" placeholder="(19) 99999-9999">
+    <div class="sep"></div>
+    <div class="fs">📍 Endereço</div>
+    <label class="il">Endereço completo</label><input class="inp" placeholder="Rua das Flores, 123, Centro">
+    <div class="ir"><div class="ig"><label class="il">Cidade</label><input class="inp" placeholder="Socorro"></div><div class="ig"><label class="il">CEP</label><input class="inp" placeholder="13960-000"></div></div>
+    <button class="bsal" onclick="go('t-pag')">Salvar e continuar →</button>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+</div>
+
+<!-- PAGAMENTO -->
+<div class="tela" id="t-pag">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div style="padding:10px 14px 2px;"><div style="font-size:20px;font-weight:900;letter-spacing:-1px;margin-bottom:2px;">Pagamento</div><div style="font-size:12px;color:var(--cinza);">Ative seu Scootlink agora</div></div>
+  <div class="wc">
+    <div class="rl"><span class="rl-k">Plano Scootlink Mensal</span><span class="rl-v">R$ 29,90/mês</span></div>
+    <div class="rl"><span class="rl-k">1º mês</span><span class="rl-v v">Grátis</span></div>
+    <div class="rl"><span class="rl-k" style="font-weight:800;color:#0A0E1A;">Total hoje</span><span class="rl-v g">R$ 0,00</span></div>
+    <div class="rl"><span class="rl-k">A partir do 2º mês</span><span class="rl-v">R$ 29,90/mês</span></div>
+    <div style="height:12px;"></div>
+    <div class="po">
+      <div class="po-opt on" onclick="selPay(this)"><div class="po-ic">📱</div><div class="po-n">Pix</div><div class="po-d">Imediato</div></div>
+      <div class="po-opt" onclick="selPay(this)"><div class="po-ic">💳</div><div class="po-n">Cartão</div><div class="po-d">Até 12×</div></div>
+    </div>
+    <div style="background:var(--campo);border-radius:11px;padding:14px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:52px;margin-bottom:7px;">▣</div>
+      <div style="font-size:10px;color:var(--cinza);">scootlink@neuraorb · R$150,00</div>
+    </div>
+    <button class="bsal" onclick="go('t-confirma')">✅ Confirmar pagamento</button>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+</div>
+
+<!-- CONFIRMAÇÃO -->
+<div class="tela" id="t-confirma">
+  <div class="ch-wrap">
+    <div class="ch-circ">🎉</div>
+    <div class="ch-t">Conta <span>ativada!</span></div>
+    <div class="ch-s">Pagamento confirmado. Instale agora no celular do piloto.</div>
+    <div class="placa">
+      <div class="pl-top"><div class="pl-merc"><span style="font-size:5px;">★★★</span><span>MERCOSUL</span></div><div class="pl-br-txt">BRASIL</div><div>🇧🇷</div></div>
+      <div class="pl-body"><div class="pl-cod">FGK@<br>3495</div></div>
+      <div class="pl-bot"><div class="pl-br">BR</div><div class="pl-brand">@scootlink</div></div>
+    </div>
+    <div style="width:100%;">
+      <button class="bv" onclick="go('t-dash')">📱 Abrir Dashboard</button>
+      <button class="be" onclick="go('t-dash')">🛴 App do piloto</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTÓRICO -->
+<div class="tela" id="t-hist">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill"     onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill"     onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill on"  onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill"     onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill"     onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill"     onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div class="sh v"><div style="font-size:24px;">📋</div><div><div class="sh-t">Histórico</div><div class="sh-s">Registros permanentes de João Pedro</div></div></div>
+  <div class="wc">
+    <div class="tp"><button class="tpb on" onclick="tpOn(this)">Diário</button><button class="tpb" onclick="tpOn(this)">Semanal</button><button class="tpb" onclick="tpOn(this)">Mensal</button></div>
+    <div class="hs">
+      <div><div class="hs-v">14,7 km</div><div class="hs-l">Distância total hoje</div></div>
+      <div><div class="hs-v r">5</div><div class="hs-l">Infrações de velocidade</div></div>
+      <div><div class="hs-v">41 km/h</div><div class="hs-l">Velocidade máxima</div></div>
+      <div><div class="hs-v">26 km/h</div><div class="hs-l">Velocidade média</div></div>
+    </div>
+    <div class="avp"><span>🔒</span><p>Registros históricos são permanentes e não podem ser apagados</p></div>
+    <div class="wt">Localização e movimento</div>
+    <div class="fi"><div class="fic v">🗺️</div><div><div class="fi-t">Rota completa do percurso</div><div class="fi-d">Mapa com trajeto detalhado</div></div></div>
+    <div class="fi"><div class="fic v">⚡</div><div><div class="fi-t">Velocidade em cada ponto</div><div class="fi-d">Registrada em todo o trajeto</div></div></div>
+    <div class="fi"><div class="fic l">🏆</div><div><div class="fi-t">Velocidade máxima atingida</div><div class="fi-d" style="color:var(--vermelho);font-weight:600;">41 km/h hoje</div></div></div>
+    <div class="fi"><div class="fic v">📊</div><div><div class="fi-t">Velocidade média</div><div class="fi-d">26 km/h hoje</div></div></div>
+    <div class="fi"><div class="fic v">⏱️</div><div><div class="fi-t">Tempo total em movimento</div><div class="fi-d">28 minutos hoje</div></div></div>
+    <div class="fi"><div class="fic v">📍</div><div><div class="fi-t">Distância total percorrida</div><div class="fi-d">14,7 km hoje</div></div></div>
+    <div style="height:12px;"></div>
+    <div class="wt">Paradas detectadas</div>
+    <div class="par"><div style="font-size:16px;">☕</div><div><div class="par-t">Padaria Central</div><div class="par-d">4 min · R. XV de Novembro, 120 · 08h37</div></div></div>
+    <div class="par"><div style="font-size:16px;">🏫</div><div><div class="par-t">Escola Estadual</div><div class="par-d">Chegada · 08h48 · Destino final</div></div></div>
+    <div style="height:12px;"></div>
+    <div class="wt">Comportamento</div>
+    <div class="fi"><div class="fic r">💥</div><div><div class="fi-t">Aceleração brusca</div><div class="fi-d" style="color:var(--vermelho);">1 evento · 08h38</div></div></div>
+    <div class="fi"><div class="fic r">🛑</div><div><div class="fi-t">Frenagem brusca</div><div class="fi-d">Nenhuma detectada hoje</div></div></div>
+    <div class="fi"><div class="fic b">📌</div><div><div class="fi-t">Locais frequentes</div><div class="fi-d">Escola, Padaria, Praça Central</div></div></div>
+    <div class="fi"><div class="fic v">🕐</div><div><div class="fi-t">Horários de saída e chegada</div><div class="fi-d">Saída 08h35 · Chegada 08h48</div></div></div>
+    <div class="fi"><div class="fic r">🚫</div><div><div class="fi-t">Áreas proibidas</div><div class="fi-d">Nenhuma violação hoje</div></div></div>
+    <div style="height:12px;"></div>
+    <div class="wt">Dispositivo</div>
+    <div class="fi"><div class="fic v">🔋</div><div><div class="fi-t">Bateria durante percurso</div><div class="fi-d">Mín. 68% · Máx. 75%</div></div></div>
+    <div class="fi"><div class="fic v">📵</div><div><div class="fi-t">Celular virado — boa prática</div><div class="fi-d">80% do percurso com tela para baixo</div></div></div>
+    <div class="fi"><div class="fic v">🔒</div><div><div class="fi-t">App ativo o tempo todo</div><div class="fi-d">Nenhuma tentativa de fechar</div></div></div>
+  </div>
+  <div style="padding:0 14px;margin-top:8px;">
+    <div class="hd"><div class="hd-top"><div class="hd-data">Hoje — 05 mai 2026</div><div class="hdb r">3 alertas</div></div><div class="hbw"><div class="hbl"><span>Vel. máx.</span><span style="color:var(--vermelho);">41 km/h</span></div><div class="hbar"><div class="hbf" style="width:85%;background:var(--vermelho);"></div></div></div><div class="hbw"><div class="hbl"><span>Vel. média</span></div><div class="hbar"><div class="hbf" style="width:54%;background:var(--verde);"></div></div></div></div>
+    <div class="hd"><div class="hd-top"><div class="hd-data">Ontem — 04 mai 2026</div><div class="hdb v">Sem alertas</div></div><div class="hbw"><div class="hbl"><span>Vel. máx.</span></div><div class="hbar"><div class="hbf" style="width:55%;background:var(--verde);"></div></div></div><div class="hbw"><div class="hbl"><span>Vel. média</span></div><div class="hbar"><div class="hbf" style="width:40%;background:var(--verde);"></div></div></div></div>
+    <div class="hd"><div class="hd-top"><div class="hd-data">03 mai 2026</div><div class="hdb a">1 alerta</div></div><div class="hbw"><div class="hbl"><span>Vel. máx.</span><span style="color:var(--laranja);">34 km/h</span></div><div class="hbar"><div class="hbf" style="width:68%;background:var(--laranja);"></div></div></div><div class="hbw"><div class="hbl"><span>Vel. média</span></div><div class="hbar"><div class="hbf" style="width:42%;background:var(--verde);"></div></div></div></div>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+  <nav class="nav">
+    <button class="nb" onclick="go('t-dash');nbOn(this)"><span class="nb-ic">🏠</span><span class="nb-lb">Início</span></button>
+    <button class="nb on" onclick="go('t-hist');nbOn(this)"><span class="nb-ic">📊</span><span class="nb-lb">Histórico</span></button>
+    <button class="nb" onclick="go('t-alertas');nbOn(this)"><span class="nb-ic">🔔</span><span class="nb-lb">Alertas</span></button>
+    <button class="nb" onclick="go('t-eventos');nbOn(this)"><span class="nb-ic">🎉</span><span class="nb-lb">Eventos</span></button>
+  </nav>
+</div>
+
+<!-- ALERTAS -->
+<div class="tela" id="t-alertas">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill"     onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill"     onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill"     onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill on"  onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill"     onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill"     onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div class="sh r"><div style="font-size:24px;">🚨</div><div><div class="sh-t">Central de Alertas</div><div class="sh-s">Notificações de velocidade excessiva</div></div></div>
+  <div class="wc">
+    <div class="as">Hoje</div>
+    <div class="ai"><div class="aidot r"></div><div><div class="ai-t">Velocidade excessiva <span class="ai-b">NOVO</span></div><div class="ai-d">João Pedro atingiu <strong>41 km/h</strong> — 9 km/h acima do limite.</div><div class="ai-h">⏰ Hoje às 14h23</div></div></div>
+    <div class="ai"><div class="aidot r"></div><div><div class="ai-t">Velocidade excessiva <span class="ai-b">NOVO</span></div><div class="ai-d">João Pedro atingiu <strong>36 km/h</strong> — 4 km/h acima do limite.</div><div class="ai-h">⏰ Hoje às 11h07</div></div></div>
+    <div class="ai"><div class="aidot a"></div><div><div class="ai-t">Atenção: perto do limite</div><div class="ai-d">Velocidade de <strong>31 km/h</strong> — 1 km/h abaixo do limite.</div><div class="ai-h">⏰ Hoje às 09h45</div></div></div>
+    <div class="as">Ontem</div>
+    <div class="ai"><div class="aidot v"></div><div><div class="ai-t">Dia sem infrações ✅</div><div class="ai-d">Nenhum registro acima de 32 km/h em 04/05/2026.</div><div class="ai-h">⏰ 04 mai — dia inteiro</div></div></div>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+  <nav class="nav">
+    <button class="nb" onclick="go('t-dash');nbOn(this)"><span class="nb-ic">🏠</span><span class="nb-lb">Início</span></button>
+    <button class="nb" onclick="go('t-hist');nbOn(this)"><span class="nb-ic">📊</span><span class="nb-lb">Histórico</span></button>
+    <button class="nb on" onclick="go('t-alertas');nbOn(this)"><span class="nb-ic">🔔</span><span class="nb-lb">Alertas</span></button>
+    <button class="nb" onclick="go('t-eventos');nbOn(this)"><span class="nb-ic">🎉</span><span class="nb-lb">Eventos</span></button>
+  </nav>
+</div>
+
+<!-- EVENTOS -->
+<div class="tela" id="t-eventos">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill"     onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill"     onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill"     onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill"     onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill on"  onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill"     onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div class="sh v"><div style="font-size:24px;">🎉</div><div><div class="sh-t">Eventos & Novidades</div><div class="sh-s">Central Scootlink — sua cidade em movimento</div></div></div>
+  <div class="wc">
+    <div class="wt">Destaques da semana</div>
+    <div class="ei"><div class="ei-bar" style="background:#9B59B6;"></div><div><div class="ei-cat" style="color:#9B59B6;">🎵 SHOW</div><div class="ei-t">Festival de Verão no Recinto</div><div class="ei-d">Shows ao vivo com as melhores bandas. Entrada gratuita para pilotos Scootlink!</div><div class="ei-dt">📅 Sáb, 10 mai · ⏰ 18h</div><div class="ei-ex">✨ Exclusivo Scootlink</div></div></div>
+    <div class="ei"><div class="ei-bar" style="background:var(--verde);"></div><div><div class="ei-cat" style="color:var(--vd);">🛴 ENCONTRO</div><div class="ei-t">Encontro de Scooters Elétricos</div><div class="ei-d">Venha mostrar sua scooter e conhecer outros pilotos da comunidade.</div><div class="ei-dt">📅 Dom, 01 jun · 09h–13h · Socorro SP</div></div></div>
+    <div class="ei"><div class="ei-bar" style="background:var(--vermelho);"></div><div><div class="ei-cat" style="color:var(--vermelho);">🚦 TRÂNSITO</div><div class="ei-t">Blitz na Av. Álvaro de Carvalho</div><div class="ei-d">Operação de fiscalização das 7h às 9h. Atenção no percurso escolar.</div><div class="ei-dt">📅 Amanhã · 07h00</div></div></div>
+    <div class="ei"><div class="ei-bar" style="background:var(--verde);"></div><div><div class="ei-cat" style="color:var(--vd);">💉 SAÚDE</div><div class="ei-t">Campanha de Vacinação</div><div class="ei-d">Vacinação contra gripe na UBS Central. Menores com prioridade.</div><div class="ei-dt">📅 Sáb e Dom · 8h–16h</div></div></div>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+  <nav class="nav">
+    <button class="nb" onclick="go('t-dash');nbOn(this)"><span class="nb-ic">🏠</span><span class="nb-lb">Início</span></button>
+    <button class="nb" onclick="go('t-hist');nbOn(this)"><span class="nb-ic">📊</span><span class="nb-lb">Histórico</span></button>
+    <button class="nb" onclick="go('t-alertas');nbOn(this)"><span class="nb-ic">🔔</span><span class="nb-lb">Alertas</span></button>
+    <button class="nb on" onclick="go('t-eventos');nbOn(this)"><span class="nb-ic">🎉</span><span class="nb-lb">Eventos</span></button>
+  </nav>
+</div>
+
+<!-- DASHBOARD -->
+<div class="tela" id="t-dash">
+  <div class="logo"><h1><span>Scoot</span>link</h1><p>Ecossistema de inteligência urbana</p></div>
+  <div class="pills">
+    <div class="pill"     onclick="go('t-bv',this)">Boas-vindas</div>
+    <div class="pill"     onclick="go('t-cad',this)">Cadastro</div>
+    <div class="pill"     onclick="go('t-hist',this)">Histórico</div>
+    <div class="pill"     onclick="go('t-alertas',this)">Alertas</div>
+    <div class="pill"     onclick="go('t-eventos',this)">Eventos</div>
+    <div class="pill on"  onclick="go('t-dash',this)">Dashboard</div>
+  </div>
+  <div class="dc" style="display:flex;align-items:center;justify-content:space-between;">
+    <div><div style="font-size:12px;color:var(--cinza);">Olá, responsável 👋</div><div style="font-size:18px;font-weight:800;">João Pedro</div></div>
+    <div style="width:40px;height:40px;border-radius:50%;background:var(--verde);display:flex;align-items:center;justify-content:center;font-size:19px;">🧑</div>
+  </div>
+  <!-- GPS STATUS -->
+  <div class="dc" style="margin-top:8px;">
+    <div class="gps-bar" id="gpsBar">
+      <div class="gps-dot" id="gpsDot"></div>
+      <div class="gps-txt" id="gpsTxt">Solicitando permissão de GPS...</div>
+      <div class="gps-plat" id="gpsPlat"></div>
+    </div>
+    <div class="ios-badge" id="iosBadge" style="display:none;">
+      📐 <span>iOS detectado — Modo físico ativo: análise aleatória Δs/Δt. GPS contínuo substituído por amostragem inteligente.</span>
+    </div>
+  </div>
+  <div class="scs"><div style="font-size:28px;">🛵</div><div style="flex:1;"><div class="scs-cat">Scooter</div><div class="scs-n">Conectada</div></div><div class="scs-badge">Online</div></div>
+  <div class="vc">
+    <div class="vc-lbl">⚡ Velocidade em tempo real</div>
+    <div class="vc-body">
+      <div class="vc-svg">
+        <svg viewBox="0 0 190 106">
+          <path d="M 14 96 A 80 80 0 0 1 176 96" fill="none" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+          <path id="arcD" d="M 14 96 A 80 80 0 0 1 176 96" fill="none" stroke="#00E676" stroke-width="10" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251"/>
+          <line x1="95" y1="17" x2="95" y2="28" stroke="#FF9500" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div class="vc-center"><div class="vnum ok" id="vNum">0</div><div class="vkmh">km/h</div></div>
+      </div>
+      <div class="vst" id="vSt">⏳ Aguardando GPS...</div>
+    </div>
+  </div>
+  <div class="wc">
+    <div class="wt">📈 Histórico de velocidade — últimos 60s</div>
+    <div class="hvc"><div class="hvc-lim"></div><div class="hvc-line"></div></div>
+  </div>
+  <div class="ms3">
+    <div class="ms"><div class="ms-ic">📍</div><div class="ms-v" id="stDist">--</div><div class="ms-l">Percurso hoje</div></div>
+    <div class="ms"><div class="ms-ic">⏱️</div><div class="ms-v" id="stTempo">--</div><div class="ms-l">Tempo uso</div></div>
+    <div class="ms"><div class="ms-ic">🚨</div><div class="ms-v r" id="stAlertas">0</div><div class="ms-l">Alertas hoje</div></div>
+  </div>
+  <div class="wc" style="margin-top:8px;">
+    <div class="wt">Monitoramento ativo — IA</div>
+    <div class="fi"><div class="fic b">🧠</div><div><div class="fi-t">Análise física Δs/Δt</div><div class="fi-d" id="iaStatus">Aguardando início do percurso</div></div></div>
+    <div class="fi"><div class="fic v">📵</div><div><div class="fi-t">Celular virado</div><div class="fi-d">Boa prática no trânsito</div></div></div>
+    <div class="fi"><div class="fic v">🔋</div><div><div class="fi-t">Bateria</div><div class="fi-d" id="bateria">--</div></div></div>
+    <div class="fi"><div class="fic r">🚫</div><div><div class="fi-t">Zona proibida</div><div class="fi-d">Nenhuma violação detectada</div></div></div>
+  </div>
+  <!-- MAPA COM ROTA -->
+  <div class="wc" style="margin-top:8px;">
+    <div class="wt">🗺️ Rota em tempo real</div>
+    <div id="mapaRota" style="width:100%;height:180px;background:#0A1018;border-radius:12px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,230,118,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,.04) 1px,transparent 1px);background-size:24px 24px;"></div>
+      <div style="position:absolute;height:6px;width:100%;top:40%;background:rgba(255,255,255,.05);"></div>
+      <div style="position:absolute;width:6px;height:100%;left:30%;background:rgba(255,255,255,.05);"></div>
+      <div style="position:absolute;width:6px;height:100%;left:65%;background:rgba(255,255,255,.04);"></div>
+      <canvas id="rotaCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+      <div id="pinAtual" style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transition:left .5s,top .5s;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#00E676;border:2.5px solid #0A1018;box-shadow:0 0 0 4px rgba(0,230,118,.25);"></div>
+        <div style="font-size:9px;font-weight:600;background:#0F1829;padding:1px 5px;border-radius:4px;color:#F0F2F5;border:1px solid #1A2540;white-space:nowrap;">📍 Você</div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:10px;font-size:9px;color:#4A5568;background:rgba(10,16,24,.8);padding:3px 7px;border-radius:5px;display:flex;align-items:center;gap:4px;">
+        <div style="width:5px;height:5px;border-radius:50%;background:#00E676;animation:dp 1.5s ease infinite;"></div>
+        GPS ativo
+      </div>
+      <div style="position:absolute;bottom:8px;right:10px;font-size:10px;font-weight:600;color:#00E676;background:rgba(0,230,118,.1);padding:3px 8px;border-radius:5px;border:1px solid rgba(0,230,118,.3);" id="mapaVel">0 km/h</div>
+    </div>
+  </div>
+  <!-- PARADAS -->
+  <div class="wc" style="margin-top:8px;">
+    <div class="wt">⏸️ Paradas detectadas</div>
+    <div id="paradasLista">
+      <div style="font-size:12px;color:#B0BAD0;padding:8px 0;text-align:center;">Nenhuma parada detectada ainda</div>
+    </div>
+  </div>
+  <div class="br2">
+    <button class="brv" onclick="simV(22)">✅ Simular 22km/h</button>
+    <button class="brr" onclick="simV(41)">⚠️ Simular 41km/h</button>
+  </div>
+  <div class="nf"><div class="nf-t">por <b>NeuraOrb</b> · Protótipos Inteligentes</div></div>
+  <nav class="nav">
+    <button class="nb on" onclick="go('t-dash');nbOn(this)"><span class="nb-ic">🏠</span><span class="nb-lb">Início</span></button>
+    <button class="nb" onclick="go('t-hist');nbOn(this)"><span class="nb-ic">📊</span><span class="nb-lb">Histórico</span></button>
+    <button class="nb" onclick="go('t-alertas');nbOn(this)"><span class="nb-ic">🔔</span><span class="nb-lb">Alertas</span></button>
+    <button class="nb" onclick="go('t-eventos');nbOn(this)"><span class="nb-ic">🎉</span><span class="nb-lb">Eventos</span></button>
+  </nav>
+</div>
+
+</div><!-- fim app -->
+
+<script>
+// ── SPLASH ──
+setTimeout(()=>document.getElementById('splash').classList.add('out'), 2500);
+
+// ── NAVEGAÇÃO ──
+function go(id, el){
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+  window.scrollTo(0,0);
+  if(el){
+    el.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+    el.classList.add('on');
+  }
+}
+function nbOn(el){
+  el.closest('nav').querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function selPay(el){
+  document.querySelectorAll('.po-opt').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function tpOn(el){
+  el.closest('.tp').querySelectorAll('.tpb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── DETECÇÃO DE PLATAFORMA ──
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const platEl = document.getElementById('gpsPlat');
+const iosBadge = document.getElementById('iosBadge');
+if(isIOS){
+  platEl.textContent = 'iOS · Modo Físico';
+  platEl.className = 'gps-plat ios';
+  iosBadge.style.display = 'flex';
+} else {
+  platEl.textContent = 'Android · GPS Contínuo';
+  platEl.className = 'gps-plat android';
+}
+
+// ── GPS REAL ──
+let velAtual = 0, velAlvo = 0, distTotal = 0;
+let ultimaPos = null, ultimoTempo = null;
+let alertasHoje = 0, tempoInicio = null;
+let watchId = null;
+
+function iniciarGPS(){
+  if(!navigator.geolocation){ gpsErro('GPS não suportado'); return; }
+  document.getElementById('gpsTxt').textContent = 'Conectando ao GPS...';
+  if(isIOS){
+    // iOS: amostragem aleatória com getCurrentPosition
+    amostragemIOS();
+  } else {
+    // Android: GPS contínuo
+    watchId = navigator.geolocation.watchPosition(onPosicao, gpsErro, {
+      enableHighAccuracy: true, maximumAge: 2000, timeout: 10000
+    });
+  }
+}
+
+function amostragemIOS(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    onPosicao(pos);
+    // próxima amostragem aleatória entre 15 e 45 segundos
+    const proximo = 15000 + Math.random() * 30000;
+    document.getElementById('iaStatus').textContent =
+      `Próxima análise em ~${Math.round(proximo/1000)}s · Δs/Δt`;
+    setTimeout(amostragemIOS, proximo);
+  }, gpsErro, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+function onPosicao(pos){
+  const agora = Date.now();
+  const dot = document.getElementById('gpsDot');
+  const txt = document.getElementById('gpsTxt');
+  dot.className = 'gps-dot on';
+  txt.textContent = `GPS ativo · Precisão ±${Math.round(pos.coords.accuracy)}m`;
+  if(!tempoInicio) tempoInicio = agora;
+
+  // Calcular velocidade por física se temos ponto anterior
+  if(ultimaPos && ultimoTempo){
+    const dt = (agora - ultimoTempo) / 1000; // segundos
+    const ds = haversine(
+      ultimaPos.latitude, ultimaPos.longitude,
+      pos.coords.latitude, pos.coords.longitude
+    ); // metros
+    const velCalc = dt > 0 ? (ds / dt) * 3.6 : 0; // km/h
+    distTotal += ds;
+    atualizaVel(Math.min(velCalc, 80));
+    document.getElementById('stDist').textContent = distTotal < 1000
+      ? Math.round(distTotal) + 'm'
+      : (distTotal/1000).toFixed(1) + 'km';
+    document.getElementById('iaStatus').textContent =
+      `Δs=${Math.round(ds)}m · Δt=${dt.toFixed(1)}s · ${velCalc.toFixed(1)}km/h`;
+  }
+
+  ultimaPos = pos.coords;
+  ultimoTempo = agora;
+
+  // Tempo de uso
+  if(tempoInicio){
+    const min = Math.round((agora - tempoInicio) / 60000);
+    document.getElementById('stTempo').textContent = min < 1 ? '<1min' : min + 'min';
+  }
+
+  // Bateria
+  if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+      document.getElementById('bateria').textContent =
+        Math.round(b.level*100) + '% · ' + (b.charging ? 'Carregando' : 'Descarregando');
+    });
+  }
+}
+
+function gpsErro(e){
+  document.getElementById('gpsDot').className = 'gps-dot warn';
+  document.getElementById('gpsTxt').textContent = 'GPS indisponível — modo demonstração';
+  iniciarDemo();
+}
+
+// Haversine — distância entre dois pontos GPS em metros
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ── MODO DEMO (quando GPS não disponível) ──
+function iniciarDemo(){
+  let v=0, dir=1, alvoD=20;
+  setInterval(()=>{
+    v += dir * 0.3;
+    if(v >= alvoD){ dir=-1; }
+    if(v <= 3){ dir=1; alvoD=12+Math.floor(Math.random()*18); }
+    atualizaVel(Math.max(0,v));
+    document.getElementById('stDist').textContent = '3,2 km';
+    document.getElementById('stTempo').textContent = '28 min';
+    document.getElementById('bateria').textContent = '72% · Estável';
+    document.getElementById('iaStatus').textContent = 'Modo demonstração ativo';
+  }, 250);
+}
+
+// ── ATUALIZA VELOCÍMETRO ──
+function atualizaVel(v){
+  const vn = document.getElementById('vNum');
+  const vs = document.getElementById('vSt');
+  const arc = document.getElementById('arcD');
+  if(!vn) return;
+  vn.textContent = Math.round(v);
+  const pct = Math.min(v/50,1);
+  if(arc) arc.setAttribute('stroke-dashoffset',(251-(251*pct)).toFixed(1));
+  if(v > 32){
+    vn.className='vnum al';
+    if(arc) arc.setAttribute('stroke','#FF3B30');
+    if(vs){vs.textContent='🚨 Acima do limite!';vs.className='vst al';}
+    alertasHoje++;
+    document.getElementById('stAlertas').textContent = alertasHoje;
+  } else if(v > 25){
+    vn.className='vnum av';
+    if(arc) arc.setAttribute('stroke','#FF9500');
+    if(vs){vs.textContent='⚠️ Atenção ao limite';vs.className='vst al';}
+  } else {
+    vn.className='vnum ok';
+    if(arc) arc.setAttribute('stroke','#00E676');
+    if(vs){vs.textContent='✅ Dentro do limite';vs.className='vst';}
+  }
+}
+
+function simV(alvo){
+  let v = parseFloat(document.getElementById('vNum').textContent)||0;
+  const iv = setInterval(()=>{
+    v = v < alvo ? Math.min(v+1.2, alvo) : Math.max(v-1.2, alvo);
+    atualizaVel(v);
+    if(Math.abs(v-alvo)<0.5) clearInterval(iv);
+  }, 200);
+}
+
+// ── INICIA GPS ao carregar ──
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{ iniciarGPS(); iniciarMapa(); }, 2800);
+});
+
+// ── MAPA COM ROTA ──
+let rotaPontos = [];
+let pinX = 50, pinY = 50;
+let paradaInicio = null, paradaLocal = null;
+const PARADA_VEL = 3; // km/h
+const PARADA_MIN = 15000; // 15 segundos
+
+function iniciarMapa(){
+  const canvas = document.getElementById('rotaCanvas');
+  if(!canvas) return;
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = canvas.offsetHeight || 180;
+  desenharRota();
+  // Simula movimento no mapa quando GPS real não disponível
+  if(!navigator.geolocation){
+    simularMovimentoMapa();
+  }
+}
+
+function adicionarPontoMapa(velKmh){
+  const mapa = document.getElementById('mapaRota');
+  if(!mapa) return;
+  const w = mapa.offsetWidth;
+  const h = mapa.offsetHeight;
+  // Movimento simulado suave no mapa
+  pinX = Math.max(10, Math.min(85, pinX + (Math.random()-.3) * 4));
+  pinY = Math.max(15, Math.min(75, pinY + (Math.random()-.5) * 3));
+  const pin = document.getElementById('pinAtual');
+  if(pin){
+    pin.style.left = pinX + '%';
+    pin.style.top  = pinY + '%';
+  }
+  const mv = document.getElementById('mapaVel');
+  if(mv) mv.textContent = Math.round(velKmh) + ' km/h';
+  // Salva ponto para trilha
+  rotaPontos.push({x: pinX/100 * (w||300), y: pinY/100 * (h||180), v: velKmh});
+  if(rotaPontos.length > 80) rotaPontos.shift();
+  desenharRota();
+  // Detecta parada
+  detectarParada(velKmh);
+}
+
+function desenharRota(){
+  const canvas = document.getElementById('rotaCanvas');
+  if(!canvas || rotaPontos.length < 2) return;
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = canvas.offsetHeight || 180;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for(let i=1;i<rotaPontos.length;i++){
+    const p = rotaPontos[i];
+    const cor = p.v > 32 ? '#FF3B30' : p.v > 25 ? '#FF9500' : '#00E676';
+    ctx.strokeStyle = cor;
+    ctx.globalAlpha = 0.6 + (i/rotaPontos.length)*0.4;
+    ctx.beginPath();
+    ctx.moveTo(rotaPontos[i-1].x, rotaPontos[i-1].y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+}
+
+function detectarParada(vel){
+  const agora = Date.now();
+  if(vel < PARADA_VEL){
+    if(!paradaInicio){
+      paradaInicio = agora;
+      paradaLocal = `${pinX.toFixed(0)}°, ${pinY.toFixed(0)}°`;
+    } else if(agora - paradaInicio > PARADA_MIN){
+      const dur = Math.round((agora - paradaInicio)/1000);
+      if(dur % 10 === 0) adicionarParada(dur);
+    }
+  } else {
+    if(paradaInicio && Date.now() - paradaInicio > PARADA_MIN){
+      const dur = Math.round((Date.now() - paradaInicio)/1000);
+      adicionarParada(dur);
+    }
+    paradaInicio = null;
+  }
+}
+
+function adicionarParada(segundos){
+  const lista = document.getElementById('paradasLista');
+  if(!lista) return;
+  const vazio = lista.querySelector('div[style*="text-align:center"]');
+  if(vazio) vazio.remove();
+  const agora = new Date();
+  const hora = agora.getHours().toString().padStart(2,'0') + 'h' + agora.getMinutes().toString().padStart(2,'0');
+  const min = segundos < 60 ? segundos + 's' : Math.round(segundos/60) + 'min';
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;gap:9px;padding:9px 0;border-bottom:1px solid #E8EBF0;';
+  item.innerHTML = `<div style="font-size:16px;flex-shrink:0;">⏸️</div><div><div style="font-size:12px;font-weight:600;color:#0A0E1A;">Parada detectada</div><div style="font-size:10px;color:#8E9BB5;margin-top:1px;">${min} · ${hora} · Coord. ${paradaLocal||'--'}</div></div>`;
+  lista.appendChild(item);
+}
+
+function simularMovimentoMapa(){
+  setInterval(()=>{
+    const v = parseFloat(document.getElementById('vNum').textContent)||0;
+    adicionarPontoMapa(v);
+  }, 1200);
+}
+
+// Integra mapa com GPS real
+const _onPosOrig = onPosicao;
+function onPosicao(pos){
+  _onPosOrig(pos);
+  const v = parseFloat(document.getElementById('vNum').textContent)||0;
+  adicionarPontoMapa(v);
+}
+</script>
+</body>
+</html>
